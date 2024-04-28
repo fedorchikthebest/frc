@@ -48,8 +48,8 @@ void frc::Server::run(){
     // specifying the address 
     sockaddr_in serverAddress; 
     serverAddress.sin_family = AF_INET; 
-    serverAddress.sin_port = htons(5000); 
-    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1"); 
+    serverAddress.sin_port = htons(port); 
+    serverAddress.sin_addr.s_addr = inet_addr(addr); 
     status = bind(serverSocket, (struct sockaddr*)&serverAddress, 
         sizeof(serverAddress));
 
