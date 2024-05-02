@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <string.h>
+#define CHAR_MASK 0x11111111
 #define BUFFER_SIZE 5120
 
 std::map<std::string, std::string> spravochnik = {
@@ -41,6 +42,7 @@ void frc::Server::run(){
     int serverSocket;
     char buffer[BUFFER_SIZE] = { 0 }; 
     int buffer_size;
+    bool closed_found = false;
 
     serverSocket = socket(AF_INET, SOCK_STREAM, 0); 
     int status;
@@ -66,11 +68,19 @@ void frc::Server::run(){
                 //Если событие с сокетом сервера, то одобряем подключение
                 if (poll_set[i].fd == serverSocket){
                     clientSocket = accept(serverSocket, nullptr, nullptr);
-                    if (fds < POLL_SIZE){
+                    for (unsigned short int j = 0; j < fds; j++){
+                        if (poll_set[j].fd == -1){
+                            poll_set[j].fd = clientSocket;
+                            poll_set[j].events = POLLIN;
+                            closed_found = true;
+                        }
+                    }
+                    if (fds < POLL_SIZE && !closed_found){
                         poll_set[fds].fd = clientSocket;
                         poll_set[fds].events = POLLIN;
-                        ++fds;
+                        fds++;
                     }
+                    closed_found = false;
                 }
                 else {
                     buffer_size = recv(poll_set[i].fd, &buffer, BUFFER_SIZE, 0);
@@ -81,19 +91,21 @@ void frc::Server::run(){
                     }
                     else{
                         close(poll_set[i].fd);
-                        --fds;
+                        poll_set[i].fd = -1;
+                        if (i == fds - 1) fds--;
                     }
                 }
             }
         }
     }
- }
+}
 
  int frc::Server::receaver(char* buffer, int fd, int size){
     switch (buffer[0])
     {
     case 0:
-        for (int i = 1; i < fds; i++){
+        int_to_bytes(fd, &buffer[1]);
+        for (unsigned short int i = 1; i < fds; i++){
             if (poll_set[i].fd != fd){
                 send(poll_set[i].fd, buffer, size, 0);
             }
@@ -101,5 +113,29 @@ void frc::Server::run(){
         break;
         case 1:
             send(fd, spravochnik.at((std::string) &buffer[1]).c_str(), spravochnik.at((std::string) &buffer[1]).size(), 0);
+            break;
+        case 2:
+            current_user = bytes_to_int(&buffer[1]);
+            int_to_bytes(fd, &buffer[1]);
+            std::cout << &buffer[3] << std::endl;
+            for (unsigned short int i = 1; i < fds; i++){
+                if (poll_set[i].fd == current_user){
+                    send(poll_set[i].fd, buffer, size, 0);
+                }
+        }
     }
  }
+
+
+void frc::int_to_bytes(unsigned short int num, char* buf_begin){
+    std::copy(static_cast<const char*>(static_cast<const void*>(&num)),
+          static_cast<const char*>(static_cast<const void*>(&num)) + sizeof(num),
+          buf_begin);
+} 
+
+ 
+unsigned short int frc::bytes_to_int(char* buf_begin){
+    unsigned short int ans;
+    memcpy(&ans, buf_begin, sizeof(unsigned short int));
+    return ans;
+}

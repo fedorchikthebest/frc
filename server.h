@@ -6,6 +6,7 @@
 namespace frc{
     class Server{
         private:
+            unsigned short int current_user;
             char* addr;
             unsigned short port;
             int receaver(char* buffer, int fd, int size);
@@ -15,4 +16,6 @@ namespace frc{
             Server(char* ip, unsigned short int p);
             void run(); //Запуск сервера, принимающего запросы и отправляющего ответы
     };
+    void int_to_bytes(unsigned short int num, char* buf_begin);
+    unsigned short int bytes_to_int(char* buf_start);
 }

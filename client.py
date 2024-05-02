@@ -3,7 +3,7 @@ import sys
 import threading
 
 sock = socket.socket()
-sock.connect(('127.0.0.1', 5000))
+sock.connect(('127.0.0.1', 5050))
 
 def recv():
     while True:
@@ -12,13 +12,14 @@ def recv():
             sock.close()
             return 0
         try:
-            print(a[1:].decode('utf-8'))
+            print(a[3:].decode('utf-8'))
+            print(a[:3])
         except Exception:
             pass
 
 def send(name):
     while True:
-        sock.send(f'\0[{name}]:{input()}'.encode('utf-8'))
+        sock.send(f'\x00\x00\x00[{name}]:{input()}'.encode('utf-8'))
 
 
 if len(sys.argv) == 1:
