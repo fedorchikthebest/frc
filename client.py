@@ -3,7 +3,7 @@ import sys
 import threading
 
 sock = socket.socket()
-sock.connect(('127.0.0.1', 5050))
+sock.connect(('nekopara.ru', 5050))
 
 def recv():
     while True:

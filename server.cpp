@@ -61,7 +61,7 @@ void frc::Server::run(){
     poll_set[0].events = POLLIN;
     ++fds;
     while (1){
-        status = poll(poll_set, fds, 100);
+        status = poll(poll_set, fds, -1);
         // перебор событий
         for (int i = 0; i < fds; i++){
             if (poll_set[i].revents & POLLIN){
