@@ -2,39 +2,36 @@
 #include<netinet/in.h> 
 #include<sys/socket.h> 
 #include<arpa/inet.h>
-#include<iostream>
 #include<poll.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <string.h>
-#define CHAR_MASK 0x11111111
 #define BUFFER_SIZE 5120
 
-std::map<std::string, std::string> spravochnik = {
-    {"rekursion",
-    "def f(n, k):\n"
-    "   if n == k\n:"
-    "       return 1\n"
-    "   if n > k or n == 32:\n"
-    "       return 0\n"
-    "   return f(n + 3, k) + f(n + 4, k) + f(n * 3, k)\n"
-    "print(f(4, 16) * f(16, 46))"},
-    {"single",
-    "import struct\n"
-    "b = struct.pack('f', -21.25)\n"
-    "# f - single, d - double\n"
-    "print(b)\n"
-    "ans = ''\n"
-    "for el in b[::-1]:\n"
-    "    ans += hex(el)[2:].rjust(2, '0') + ' '\n"
-    "print(ans)"},
-    {"list", "-rekursion\n-single"}
-};
+std::string keys[] = {"list", "recursion", "single"};
+    std::string values[] = {
+        "recursion\nsingle",
+        "def f(n, k):\n"
+        "   if n == k\n:"
+        "       return 1\n"
+        "   if n > k or n == 32:\n"
+        "       return 0\n"
+        "   return f(n + 3, k) + f(n + 4, k) + f(n * 3, k)\n"
+        "print(f(4, 16) * f(16, 46))",
+        "import struct\n"
+        "b = struct.pack('f', -21.25)\n"
+        "# f - single, d - double\n"
+        "print(b)\n"
+        "ans = ''\n"
+        "for el in b[::-1]:\n"
+        "    ans += hex(el)[2:].rjust(2, '0') + ' '\n"
+        "print(ans)"
+    };
+
 
 frc::Server::Server(char* ip, unsigned short int p){
     addr = ip;
     port = p;
-    std::cout << addr << std::endl;
 }
 
 void frc::Server::run(){
@@ -116,12 +113,11 @@ void frc::Server::run(){
         }
         break;
         case 1:
-            send(fd, spravochnik.at((std::string) &buffer[1]).c_str(), spravochnik.at((std::string) &buffer[1]).size(), 0);
+            send_ans(buffer, fd);
             break;
         case 2:
             current_user = bytes_to_int(&buffer[1]);
             int_to_bytes(fd, &buffer[1]);
-            std::cout << &buffer[3] << std::endl;
             for (unsigned short int i = 1; i < fds; i++){
                 if (poll_set[i].fd == current_user){
                     send(poll_set[i].fd, buffer, size, 0);
@@ -142,4 +138,32 @@ unsigned short int frc::bytes_to_int(char* buf_begin){
     unsigned short int ans;
     memcpy(&ans, buf_begin, sizeof(unsigned short int));
     return ans;
+}
+void frc::send_ans(char* request, int fd){
+    switch (request[1])
+    {
+    case 'l': // list
+        send(fd, "recursion\nsingle", 17, 0);
+        break;
+    case 's': //single
+        send(fd, "import struct\n"
+            "b = struct.pack('f', -21.25)\n"
+            "# f - single, d - double\n"
+            "print(b)\n"
+            "ans = ''\n"
+            "for el in b[::-1]:\n"
+            "    ans += hex(el)[2:].rjust(2, '0') + ' '\n"
+            "print(ans)", 159, 0);
+    case 'r': //recursion
+        send(fd,
+            "def f(n, k):\n"
+            "   if n == k:\n"
+            "       return 1\n"
+            "   if n > k or n == 32:\n"
+            "       return 0\n"
+            "   return f(n + 3, k) + f(n + 4, k) + f(n * 3, k)\n"
+            "print(f(4, 16) * f(16, 46))", 161, 0);
+    default:
+        break;
+    }
 }

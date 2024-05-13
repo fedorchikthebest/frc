@@ -1,11 +1,5 @@
 #include "server.h"
 #include <sys/types.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include <string.h>
-#include <string>
 #include <signal.h>
 #include <sys/stat.h>
 #include<error.h>
@@ -14,6 +8,7 @@
 
 int main(int argc, char *argv[])
 {
+    puts("wooooork");
     if (argc < 2) return -1;
 
     int maxfd, fd;
