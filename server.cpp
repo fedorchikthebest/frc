@@ -54,6 +54,10 @@ void frc::Server::run(){
     serverAddress.sin_addr.s_addr = inet_addr(addr); 
     status = bind(serverSocket, (struct sockaddr*)&serverAddress, 
         sizeof(serverAddress));
+    
+    if (status != 0){
+        exit(-1);
+    }
 
     listen(serverSocket, 5);
 
