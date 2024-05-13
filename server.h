@@ -9,7 +9,7 @@ namespace frc{
             unsigned short int current_user;
             char* addr;
             unsigned short port;
-            int receaver(char* buffer, int fd, int size);
+            void receaver(char* buffer, int fd, int size);
             struct pollfd poll_set[POLL_SIZE];
             int fds = 0;
         public:

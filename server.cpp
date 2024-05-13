@@ -100,7 +100,7 @@ void frc::Server::run(){
     }
 }
 
- int frc::Server::receaver(char* buffer, int fd, int size){
+ void frc::Server::receaver(char* buffer, int fd, int size){
     switch (buffer[0])
     {
     case 0:
