@@ -12,12 +12,15 @@ namespace frc{
     class Server{
         private:
             unsigned short int current_user;
+            int i = 0;
             char* addr;
             unsigned short port;
             void receaver(char* buffer, int fd, int size);
             struct pollfd poll_set[POLL_SIZE];
+            int agreed_fds[POLL_SIZE] = {0};
             int fds = 0;
             std::string resp;
+            void close_fd();
         public:
             Server(char* ip, unsigned short int p);
             void run(); //Запуск сервера, принимающего запросы и отправляющего ответы

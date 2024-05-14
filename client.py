@@ -5,6 +5,8 @@ import threading
 sock = socket.socket()
 sock.connect(('nekopara.ru', 5050))
 
+a = input("Введите пароль: ")
+
 def recv():
     while True:
         a = sock.recv(5120)
@@ -12,14 +14,15 @@ def recv():
             sock.close()
             return 0
         try:
-            print(a[3:].decode('utf-8'))
-            print(a[:3])
+            print(a[11:].decode('utf-8'))
+            print(a[1:3])
         except Exception:
             pass
 
 def send(name):
+    global a
     while True:
-        sock.send(f'\x00\x00\x00[{name}]:{input()}'.encode('utf-8'))
+        sock.send(b'\x00\x00\x00' + a + f'[{name}]:{input()}'.encode('utf-8'))
 
 
 if len(sys.argv) == 1:

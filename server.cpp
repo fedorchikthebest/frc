@@ -6,32 +6,55 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <string.h>
+#include<iostream>
+#include <stdio.h> 
+#define KEYS_COUNT 10
 #define BUFFER_SIZE 5120
+#define CLIENT_SIZE 2048
 
-std::string keys[] = {"list", "recursion", "single"};
-    std::string values[] = {
-        "recursion\nsingle",
-        "def f(n, k):\n"
-        "   if n == k\n:"
-        "       return 1\n"
-        "   if n > k or n == 32:\n"
-        "       return 0\n"
-        "   return f(n + 3, k) + f(n + 4, k) + f(n * 3, k)\n"
-        "print(f(4, 16) * f(16, 46))",
-        "import struct\n"
-        "b = struct.pack('f', -21.25)\n"
-        "# f - single, d - double\n"
-        "print(b)\n"
-        "ans = ''\n"
-        "for el in b[::-1]:\n"
-        "    ans += hex(el)[2:].rjust(2, '0') + ' '\n"
-        "print(ans)"
-    };
+char client_code[CLIENT_SIZE];
+char keys[KEYS_COUNT][8];
+int client_code_size;
+
+
+bool fstrcmp(char* str1, char* str2, int size){
+    for (int i = 0; i < size; i++){
+        if (str1[i] != str2[i]) return false;
+    }
+    return true;
+}
+
+
+bool check_key(char* key){
+    for (int i = 0; i < KEYS_COUNT; i++){
+        if (fstrcmp(key, keys[i], 8)) return true;
+    }
+    return false;
+}
 
 
 frc::Server::Server(char* ip, unsigned short int p){
     addr = ip;
     port = p;
+
+    FILE *fp = fopen("client.py", "r");
+
+    if (fp){
+        client_code_size = fread(client_code, sizeof(client_code[0]), CLIENT_SIZE, fp);
+    }
+    fclose(fp);
+
+    char bf[256];
+
+    // Чтение файла с ключами
+    fp = fopen("keys.txt", "r");
+    if (fp){
+        for (i = 0; i < KEYS_COUNT; i++){
+            fgets(bf, 256, fp);
+            memcpy(keys[i], bf, 8);
+        }
+    }
+    fclose(fp);
 }
 
 void frc::Server::run(){
@@ -52,7 +75,7 @@ void frc::Server::run(){
     status = bind(serverSocket, (struct sockaddr*)&serverAddress, 
         sizeof(serverAddress));
     
-    if (status != 0){
+    if (status < 0){
         exit(-1);
     }
 
@@ -64,7 +87,7 @@ void frc::Server::run(){
     while (1){
         status = poll(poll_set, fds, -1);
         // перебор событий
-        for (int i = 0; i < fds; i++){
+        for (i = 0; i < fds; i++){
             if (poll_set[i].revents & POLLIN){
                 //Если событие с сокетом сервера, то одобряем подключение
                 if (poll_set[i].fd == serverSocket){
@@ -88,13 +111,10 @@ void frc::Server::run(){
                     // получаем отправленные клиентом данные
                     if(buffer_size > 0 && buffer_size < BUFFER_SIZE){
                         buffer[buffer_size] = '\0';
+                        if (check_key(&buffer[3])) agreed_fds[i] = poll_set[i].fd;
                         receaver(buffer, poll_set[i].fd, buffer_size);
                     }
-                    else{
-                        close(poll_set[i].fd);
-                        poll_set[i].fd = -1;
-                        if (i == fds - 1) fds--;
-                    }
+                    else close_fd();
                 }
             }
         }
@@ -108,7 +128,7 @@ void frc::Server::run(){
         int_to_bytes(fd, &buffer[1]);
         for (unsigned short int i = 1; i < fds; i++){
             if (poll_set[i].fd != fd){
-                send(poll_set[i].fd, buffer, size, 0);
+                send(agreed_fds[i], buffer, size, 0);
             }
         }
         break;
@@ -163,7 +183,19 @@ void frc::send_ans(char* request, int fd){
             "       return 0\n"
             "   return f(n + 3, k) + f(n + 4, k) + f(n * 3, k)\n"
             "print(f(4, 16) * f(16, 46))", 161, 0);
+    case 'c': //client_code
+        send(fd, client_code, client_code_size, 0);
+        break;
     default:
+        send(fd, "Not found, try list", 20, 0);
         break;
     }
+}
+
+
+void frc::Server::close_fd(){
+    close(poll_set[i].fd);
+    poll_set[i].fd = -1;
+    if (i == fds - 1) fds--;
+    agreed_fds[i] = 0;
 }
