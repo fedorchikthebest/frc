@@ -22,7 +22,7 @@ def recv():
 def send(name):
     global a
     while True:
-        sock.send(b'\x00\x00\x00' + a + f'[{name}]:{input()}'.encode('utf-8'))
+        sock.send(b'\x00\x00\x00' + a.encode('utf-8') + f'[{name}]:{input()}'.encode('utf-8'))
 
 
 if len(sys.argv) == 1:
