@@ -3,9 +3,7 @@ import sys
 import threading
 
 sock = socket.socket()
-sock.connect(('nekopara.ru', 5050))
-
-a = input("Введите пароль: ")
+sock.connect(('127.0.0.1', 5050))
 
 def recv():
     while True:
@@ -14,7 +12,7 @@ def recv():
             sock.close()
             return 0
         try:
-            print(a[11:].decode('utf-8'))
+            print(a[3:].decode('utf-8'))
             print(a[1:3])
         except Exception:
             pass
@@ -22,7 +20,7 @@ def recv():
 def send(name):
     global a
     while True:
-        sock.send(b'\x00\x00\x00' + a.encode('utf-8') + f'[{name}]:{input()}'.encode('utf-8'))
+        sock.send(b'\x00\x00\x00' + f'[{name}]:{input()}'.encode('utf-8'))
 
 
 if len(sys.argv) == 1:

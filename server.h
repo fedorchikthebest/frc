@@ -12,12 +12,11 @@ namespace frc{
     class Server{
         private:
             unsigned short int current_user;
-            int i = 0;
+            int fd_index = 0;
             char* addr;
             unsigned short port;
             void receaver(char* buffer, int fd, int size);
             struct pollfd poll_set[POLL_SIZE];
-            int agreed_fds[POLL_SIZE] = {0};
             int fds = 0;
             std::string resp;
             void close_fd();
